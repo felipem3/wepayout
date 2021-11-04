@@ -2,8 +2,11 @@
 
 namespace App\Console;
 
+use App\Models\Task;
+use Carbon\Carbon;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use Illuminate\Support\Facades\Log;
 
 class Kernel extends ConsoleKernel
 {
@@ -24,7 +27,24 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        $tasks = Task::all();
+        foreach ($tasks as $task) {
+            try {
+                $schedule->command($task->command)
+                    ->when(
+                        function () use ($task) {
+                            if (Carbon::now()->setSecond(0)->greaterThanOrEqualTo($task->date_time)) {
+                               $task->delete();
+                               return true;
+                            }
+
+                            return false;
+                        }
+                    );
+            } catch (\Exception $e) {
+                Log::error($e->getMessage());
+            }
+        }
     }
 
     /**
