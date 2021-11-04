@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Payment extends Model
 {
+    protected $hidden = ['created_at', 'updated_at'];
+
     protected $fillable = [
         'invoice',
         'recipient_name',

@@ -14,6 +14,54 @@ class PaymentControllerTest extends TestCase
 {
     use DatabaseMigrations;
 
+    public function test_list_payments()
+    {
+        DB::table('payments')->insert([[
+            'value' => 10,
+            'recipient_bank_code' => 22,
+            'recipient_branch_number' => 2356,
+            'recipient_account_number' => 43652325,
+            'recipient_name' => 'name...',
+            'invoice' => 1,
+            'status' => Payment::STATUS_PROCESSED,
+            'processor_bank_id' => 1
+        ],[
+            'value' => 100,
+            'recipient_bank_code' => 20,
+            'recipient_branch_number' => 2356,
+            'recipient_account_number' => 43652325,
+            'recipient_name' => 'name...',
+            'invoice' => 2,
+            'status' => Payment::STATUS_PROCESSED,
+            'processor_bank_id' => 2
+        ]]);
+
+        $response = $this->get('api/payments');
+
+        $response->assertStatus(200);
+        $this->assertCount(2, $response->json());
+    }
+
+    public function test_get_payments()
+    {
+        $id = DB::table('payments')->insertGetId([
+            'value' => 10,
+            'recipient_bank_code' => 22,
+            'recipient_branch_number' => 2356,
+            'recipient_account_number' => 43652325,
+            'recipient_name' => 'name...',
+            'invoice' => 1,
+            'status' => Payment::STATUS_PROCESSED,
+            'processor_bank_id' => 1
+        ]);
+
+        $response = $this->get("api/payments/{$id}");
+
+        $response->assertStatus(200);
+        $this->assertNotNull($response->json());
+        $this->assertEquals($id, $response->json()['id']);
+    }
+
     public function test_validate_min_value_of_payment()
     {
         $response = $this->post('api/payments', [
